@@ -2,7 +2,7 @@
   "name": "encryption",
   "version": "1.0.0",
   "description": "test for rsa integrity encryption",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
