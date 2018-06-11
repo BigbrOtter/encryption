@@ -1,0 +1,22 @@
+{
+  "name": "encryption",
+  "version": "1.0.0",
+  "description": "test for rsa integrity encryption",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BigbrOtter/encryption.git"
+  },
+  "author": "Ruben Hensen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BigbrOtter/encryption/issues"
+  },
+  "homepage": "https://github.com/BigbrOtter/encryption#readme",
+  "dependencies": {
+    "express": "^4.16.3"
+  }
+}
