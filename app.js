@@ -2,64 +2,69 @@ const express = require('express');
 const app = express();
 
 const NodeRSA = require('node-rsa');
-const key = new NodeRSA();
 const crypto = require('crypto');
 
+/*
+app.get('*', (req, res) => {
+  res.status(200).json({
+    test: 'test'
+  }).end()
+})
+const serverPort = 80
+app.listen(serverPort, () => {
+  console.log(`Server online op poort ${serverPort}`)
+})
+*/
 
+/*
+* Maakt een RSA private & public key aan
+*/
+const createKey = () => {
+  return new Promise((resolve, reject) => {
+    const key = new NodeRSA()
+    key.generateKeyPair()
+    const publicPem = key.exportKey('pkcs1-public-pem')
+    const privatePem = key.exportKey('pkcs1-private-pem')
+    resolve({
+      private: privatePem,
+      public: publicPem
+    })
+  })
+}
 
-app.use((req, res, next) => {
+/*
+* Maakt een digitale handtekening van data
+*/
+const createSignature = (data, privateKey) => {
+  return new Promise((resolve, reject) => {
+    let hash = crypto.createHash('sha256').update(data).digest('hex')
+    const objectPrivatePem = new NodeRSA(privateKey)
+    const encrypted = objectPrivatePem.encryptPrivate(hash, 'base64')
+    resolve(encrypted)
+  })
+}
 
-  key.generateKeyPair();
-  const publicPem = key.exportKey('pkcs1-public-pem');
-  const privatePem = key.exportKey('pkcs1-private-pem');
+/*
+* Decrypt een signature naar een hash van de data
+*/
+const verifySignature = (signature, publicKey) => {
+  return new Promise(function(resolve, reject) {
+    const objectPublicPem = new NodeRSA(publicKey)
+    const decrypted = objectPublicPem.decryptPublic(signature, 'utf-8')
+    resolve(decrypted)
+  })
+}
 
-  console.log('pkcs1 public: ', publicPem);
-  console.log('pkcs1 private: ', privatePem);
-  // const text = 'H';
-
-  // const encrypted = key.encrypt(text);
-  // console.log('encrypted: ', encrypted);
-  // const decrypted = key.decrypt(encrypted, 'utf8');
-  // console.log('decrypted: ', decrypted);
-
-  //console.log("key is private: ", key.isPrivate());
-  //console.log("key is public: ", key.isPublic());
-
-
-  const objectPublicPem = new NodeRSA(publicPem);
-  const objectPrivatePem = new NodeRSA(privatePem);
-  // console.log("publicPem is private: ", objectPublicPem.isPrivate());
-  // console.log("publicPem is public: ", objectPublicPem.isPublic(true));
-  // console.log("privatePem is private: ", objectPrivatePem.isPrivate());
-  // console.log("privatePem is public: ", objectPrivatePem.isPublic(true));
-  // // console.log("keypair is private: ", keypair.isPrivate());
-  // // console.log("keypair is public: ", keypair.isPublic());
-
-  // console.log('privatePem: ', objectPrivatePem);
-  // console.log('publicPem: ', objectPublicPem);
-  next();
-},
-function(objectPrivatePem, objectPublicPem, next){
-  const text = "Hello RSA!";
-  var hash = crypto.createHash('md5').update(text).digest('hex');
-  const encrypted = objectPrivatePem.encrypt(hash, text, 'base64');
-
-  //console.log(encrypted);
-  next();
-},
-function(encrypted){
-console.log(encrypted);
-});
-
-
-
-app.get('/', function (req, res) {
-  console.log("");
-  res.send("Hello world!");
-});
-
-// once, generate server keypair
-// genKeypair()
-// genCertificate(clientKeypair)
-// decryptCerfiticate(clientCertificate)
-// checkHash(clientPublicKey)
+createKey().then((keys) => {
+  let data = 'Hello RSA world'
+  createSignature(data, keys.private).then((signature) => {
+    verifySignature(signature, keys.public).then((hash) => {
+      let hash2 = crypto.createHash('sha256').update(data).digest('hex')
+      if(hash === hash2){
+        console.log('valid')
+      } else {
+        console.log('not valid')
+      }
+    })
+  }).catch(console.error)
+}).catch(console.error)
