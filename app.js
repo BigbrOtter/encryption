@@ -3,6 +3,7 @@ const app = express();
 
 const NodeRSA = require('node-rsa');
 const crypto = require('crypto');
+const fs = require('fs');
 
 /*
 app.get('*', (req, res) => {
@@ -19,6 +20,8 @@ app.listen(serverPort, () => {
 /*
 * Maakt een RSA private & public key aan
 */
+
+
 const createKey = () => {
   return new Promise((resolve, reject) => {
     const key = new NodeRSA()
@@ -54,6 +57,23 @@ const verifySignature = (signature, publicKey) => {
     resolve(decrypted)
   })
 }
+//Maakt server key aan (voor eenmalig gebruik)
+const createServerKey = () => {
+  return new Promise(function(resolve, reject) {
+    createKey().then((serverKeys) => {     
+      fs.writeFile('./certificate/private.pem', serverKeys.private, function (err) {
+        if (err) 
+          return console.log(err);
+          console.log('Wrote private key to file');
+      });
+      fs.writeFile('./certificate/public.pem', serverKeys.public, function (err) {
+        if (err) 
+          return console.log(err);
+          console.log('Wrote public key to file');
+      });
+    }).catch(console.error)
+  }).catch(console.error)
+}
 
 createKey().then((keys) => {
   let data = 'Hello RSA world'
@@ -68,3 +88,4 @@ createKey().then((keys) => {
     })
   }).catch(console.error)
 }).catch(console.error)
+
