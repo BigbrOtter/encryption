@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/BigbrOtter/encryption#readme",
   "dependencies": {
-    "express": "^4.16.3"
+    "express": "^4.16.3",
+    "node-rsa": "^1.0.0"
   }
 }
