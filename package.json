@@ -18,6 +18,7 @@
   "homepage": "https://github.com/BigbrOtter/encryption#readme",
   "dependencies": {
     "express": "^4.16.3",
+    "mongoose": "^5.1.5",
     "node-rsa": "^1.0.0"
   }
 }

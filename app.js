@@ -5,15 +5,52 @@ const NodeRSA = require('node-rsa');
 const crypto = require('crypto');
 const fs = require('fs');
 
-app.get('/register', (req, res) => {
-  // check of de username of BSN al een key heeft
-  createKey().then((keys) => {
-    const cert = new NodeRSA(readServerKey('private')).encryptPrivate(keys.public, 'base64')
-    // save public, private & cert to MongoDB /w username or BSN
+const User = require('./user.model')
+
+app.get('/findPublicKey', (req, res) => {
+  const bsn = req.headers.bsn
+  User.findOne({bsn: bsn}).then((user) => {
     res.status(200).json({
-      private: keys.private,
-      cert: cert
+      public: user.public
     }).end()
+  }).catch(() => {
+    res.status(400).json({
+      error: `User with BSN '${bsn}' not found`
+    }).end()
+  })
+})
+
+// register route, zoekt of persoon al bestaat en anders maakt hij nieuwe keys
+app.get('/register', (req, res) => {
+  const bsn = req.headers.bsn
+  const naam = req.headers.naam
+  // check of de username of BSN al een key heeft
+  User.findOne({bsn: bsn}).then((user) => {
+    console.log(`Found user '${naam} with BSN '${bsn}' in the DB.`)
+    res.status(200).json({
+      private: user.private,
+      cert: user.cert
+    }).end()
+  }).catch(() => {
+    console.log(`Created new user '${naam} with BSN '${bsn}'`)
+    createKey().then((keys) => {
+      const cert = new NodeRSA(readServerKey('private')).encryptPrivate(keys.public, 'base64')
+      const newUser = new User({
+        bsn: bsn,
+        naam: naam,
+        private: keys.private,
+        public: keys.public,
+        cert: cert
+      })
+      newUser.save((err) => {
+        if (err) throw err
+        console.log(`user saved!`)
+      })
+      res.status(200).json({
+        private: keys.private,
+        cert: cert
+      }).end()
+    })
   })
 })
 
