@@ -1,24 +1,12 @@
 {
   "name": "encryption",
   "version": "1.0.0",
-  "description": "test for rsa integrity encryption",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/BigbrOtter/encryption.git"
-  },
-  "author": "Ruben Hensen",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/BigbrOtter/encryption/issues"
-  },
-  "homepage": "https://github.com/BigbrOtter/encryption#readme",
+  "main": "index.js",
   "dependencies": {
-    "express": "^4.16.3",
-    "mongoose": "^5.1.5",
-    "node-rsa": "^1.0.0"
+    "node-media-server": "^1.3.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node index.js"
   }
 }
