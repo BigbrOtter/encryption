@@ -13,6 +13,7 @@ app.get('/findPublicKey', (req, res) => {
     res.status(200).json({
       public: user.public
     }).end()
+    
   }).catch(() => {
     res.status(400).json({
       error: `User with BSN '${bsn}' not found`
@@ -34,30 +35,61 @@ app.get('/register', (req, res) => {
   }).catch(() => {
     console.log(`Created new user '${naam} with BSN '${bsn}'`)
     createKey().then((keys) => {
-      const cert = new NodeRSA(readServerKey('private')).encryptPrivate(keys.public, 'base64')
+      //const cert = new NodeRSA(readServerKey('private')).encryptPrivate(keys.public, 'base64')
       const newUser = new User({
         bsn: bsn,
         naam: naam,
         private: keys.private,
         public: keys.public,
-        cert: cert
+        //cert: cert
       })
       newUser.save((err) => {
         if (err) throw err
         console.log(`user saved!`)
       })
+      saveKey(keys, newUser).then(() => {
+        if (err) throw err;
+      })
       res.status(200).json({
-        private: keys.private,
-        cert: cert
-      }).end()
+        text: "Certificaat aangemaakt!"
+      })
+      .end()
     })
   })
 })
+
+// Encrypt en decrypt met certificaat
+// app.get('/log', (req, res) => {
+//   //console.log(readUserKey());
+//  var userKey = JSON.parse(readUserKey());
+//  var private = userKey.private;
+//  console.log("private key;" + private);
+//  var public = new NodeRSA(readServerKey('public')).decryptPublic(userKey.public, 'utf-8')
+//  console.log("public key" + public);
+//  var file = "DIKKE TEST";
+//  var encryptedFile = new NodeRSA(private).encryptPrivate(file, "base64");
+//  console.log(encryptedFile);
+//  var decryptedFile = new NodeRSA(public).decryptPublic(encryptedFile, 'utf8');
+//  console.log(decryptedFile);
+ 
+
+// })
 
 const serverPort = 80
 app.listen(serverPort, () => {
   console.log(`Server online op poort ${serverPort}`)
 })
+
+const saveKey = (cert, user) => {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(`./certificate/user/${user.bsn}.circle`, JSON.stringify({private: cert.private, public: cert.encPublic}), function (err) {
+      if (err)
+        return console.log(err);
+        console.log('Wrote private key to file');
+    });
+    
+  })
+}
 
 // Maakt een RSA private & public key aan
 const createKey = () => {
@@ -66,9 +98,12 @@ const createKey = () => {
     key.generateKeyPair()
     const publicPem = key.exportKey('pkcs1-public-pem')
     const privatePem = key.exportKey('pkcs1-private-pem')
+    const cert = new NodeRSA(readServerKey('private')).encryptPrivate(publicPem, 'base64')
+   // console.log(privatePem);
     resolve({
       private: privatePem,
-      public: publicPem
+      public: publicPem,
+      encPublic: cert
     })
   })
 }
@@ -97,6 +132,12 @@ const readServerKey = (type) => {
   const key = fs.readFileSync(`./certificate/${type}.pem`, {encoding: 'utf-8'})
   return key
 }
+
+// laad het certificaat van een gebruiker in, is voor test doeleinde
+// const readUserKey = () => {
+//   const key = fs.readFileSync('./certificate/user/842602623.circle', {encoding: 'utf-8'})
+//   return key
+// }
 
 // Maakt server key aan (voor eenmalig gebruik)
 const createServerKey = () => {
